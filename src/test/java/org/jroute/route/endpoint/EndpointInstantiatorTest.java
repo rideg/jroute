@@ -3,7 +3,7 @@ package org.jroute.route.endpoint;
 
 import org.junit.Test;
 
-public class EndpointInstantatorTest {
+public class EndpointInstantiatorTest {
 
     @Test
     public void test() {

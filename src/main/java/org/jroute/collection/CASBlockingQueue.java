@@ -1,25 +1,19 @@
 package org.jroute.collection;
 
-import java.lang.reflect.Constructor;
-
 import sun.misc.Unsafe;
 
 public class CASBlockingQueue<T> {
 
-    private static final Unsafe unsafe;
+    private static final Unsafe UNSAFE;
     private static final long headOffset;
     private static final long tailOffset;
 
     static {
+        UNSAFE = UnsafeHelper.getUnsafe();
         try {
-            Constructor<Unsafe> unsafeConstructor = Unsafe.class.getDeclaredConstructor();
-            unsafeConstructor.setAccessible(true);
-            unsafe = unsafeConstructor.newInstance();
-
-            headOffset = unsafe.objectFieldOffset(CASBlockingQueue.class.getField("head"));
-            tailOffset = unsafe.objectFieldOffset(CASBlockingQueue.class.getField("tail"));
-
-        } catch (Exception e) {
+            headOffset = UNSAFE.objectFieldOffset(CASBlockingQueue.class.getField("head"));
+            tailOffset = UNSAFE.objectFieldOffset(CASBlockingQueue.class.getField("tail"));
+        } catch (NoSuchFieldException e) {
             throw new Error(e);
         }
     }
@@ -54,27 +48,27 @@ public class CASBlockingQueue<T> {
         boolean updateTail = true;
         Node<T> headCopy = head;
 
-        while (!unsafe.compareAndSwapObject(this, headOffset, headCopy, node)) {
+        while (!UNSAFE.compareAndSwapObject(this, headOffset, headCopy, node)) {
             headCopy = head;
             updateTail = false;
         }
         headCopy.setNext(node);
 
         if (updateTail && tail == null) {
-            unsafe.compareAndSwapObject(this, tailOffset, null, headCopy);
+            UNSAFE.compareAndSwapObject(this, tailOffset, null, headCopy);
         }
     }
 
     public T shift() {
         Node<T> tailCopy = getCopy();
         boolean updateHead = true;
-        while (!unsafe.compareAndSwapObject(this, tailOffset, tailCopy, tailCopy.getNext())) {
+        while (!UNSAFE.compareAndSwapObject(this, tailOffset, tailCopy, tailCopy.getNext())) {
             tailCopy = getCopy();
             updateHead = false;
         }
 
         if (updateHead && tailCopy.getNext() == null) {
-            unsafe.compareAndSwapObject(this, headOffset, tailCopy, null);
+            UNSAFE.compareAndSwapObject(this, headOffset, tailCopy, null);
         }
 
         return tailCopy.getValue();
@@ -82,7 +76,7 @@ public class CASBlockingQueue<T> {
 
     private Node<T> getCopy() {
         Node<T> tailCopy;
-        for (;;) {
+        for (; ; ) {
             for (int i = 0; i < 100; i++) {
                 tailCopy = tail;
                 if (tailCopy != null) {

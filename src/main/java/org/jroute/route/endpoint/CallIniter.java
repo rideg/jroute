@@ -8,11 +8,11 @@ import org.jroute.http.response.Response;
 public class CallIniter implements WrapperBase {
 
     private final MethodCaller caller;
-    private final Instantator[] chain;
+    private final Instantiator[] chain;
 
-    public CallIniter(final MethodCaller caller, final List<Instantator> wrappers) {
+    public CallIniter(final MethodCaller caller, final List<Instantiator> wrappers) {
         this.caller = caller;
-        chain = wrappers.toArray(new Instantator[wrappers.size()]);
+        chain = wrappers.toArray(new Instantiator[wrappers.size()]);
     }
 
     @Override

@@ -2,35 +2,49 @@ package org.jroute.socket;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
-import java.nio.channels.AsynchronousChannelGroup;
-import java.nio.channels.AsynchronousServerSocketChannel;
-import java.nio.channels.AsynchronousSocketChannel;
-import java.nio.channels.CompletionHandler;
-import java.util.concurrent.Executors;
-import java.util.concurrent.TimeUnit;
+import java.net.ServerSocket;
+import java.net.Socket;
+import java.net.SocketTimeoutException;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 public class ConnectionHandler {
 
-    public void open(final int port) throws IOException, InterruptedException {
+    public static final int RECEIVE_BUFFER_SIZE = 16 * 1024;
 
-        AsynchronousChannelGroup group = AsynchronousChannelGroup.withCachedThreadPool(Executors.newCachedThreadPool(),
-                Runtime.getRuntime().availableProcessors());
+    private final AtomicBoolean shouldRun = new AtomicBoolean(true);
+    private final SocketReader socketReader;
 
-        AsynchronousServerSocketChannel socket = AsynchronousServerSocketChannel.open(group).bind(
-                new InetSocketAddress(8080));
+    public ConnectionHandler(final SocketReader socketReader) {
+        this.socketReader = socketReader;
+    }
 
-        socket.accept(null, new CompletionHandler<AsynchronousSocketChannel, Object>() {
+    public void open(final int port) throws IOException {
+        final ServerSocket serverSocket = new ServerSocket();
 
-            @Override
-            public void completed(final AsynchronousSocketChannel worker, final Object attachment) {
-            }
+        serverSocket.setReuseAddress(true);
+        serverSocket.setReceiveBufferSize(RECEIVE_BUFFER_SIZE);
+        serverSocket.setSoTimeout(5);
 
-            @Override
-            public void failed(final Throwable exc, final Object attachment) {
-
+        final Thread acceptorThread = new Thread(() -> {
+            try (final ServerSocket socket = serverSocket) {
+                while (shouldRun.get()) {
+                    try {
+                        socketReader.offer(socket.accept());
+                    } catch (SocketTimeoutException ignored) {
+                    }
+                }
+            } catch (IOException ignored) {
             }
         });
+        acceptorThread.setDaemon(true);
+        acceptorThread.setName("JRoute - acceptor thread: " + port);
+        serverSocket.bind(new InetSocketAddress("localhost", port));
 
-        group.awaitTermination(Long.MAX_VALUE, TimeUnit.SECONDS);
+        acceptorThread.start();
     }
+
+    public void stop() {
+        shouldRun.set(false);
+    }
+
 }

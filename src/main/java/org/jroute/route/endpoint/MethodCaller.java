@@ -10,11 +10,11 @@ import org.jroute.route.argument.ArgumentMapper;
 public class MethodCaller extends Wrapper {
 
     private final ArgumentMapper mapper;
-    private final Instantator instantator;
+    private final Instantiator instantiator;
     private final Method method;
 
-    public MethodCaller(final Instantator instantator, final Method method) {
-        this.instantator = instantator;
+    public MethodCaller(final Instantiator instantiator, final Method method) {
+        this.instantiator = instantiator;
         this.method = method;
         mapper = new ArgumentMapper(method);
     }
@@ -25,7 +25,7 @@ public class MethodCaller extends Wrapper {
     }
 
     private Endpoint<Request> endpointFor(final Request request) throws ReflectiveOperationException {
-        return instantator.<Endpoint<Request>> newInstance().setRequest(request);
+        return instantiator.<Endpoint<Request>> newInstance().setRequest(request);
     }
 
     private Response callMethod(final Endpoint<?> instance, final Map<String, String> params)

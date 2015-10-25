@@ -1,11 +1,11 @@
 package org.jroute.http;
 
+import org.joda.time.DateTime;
+import org.joda.time.format.DateTimeFormatter;
+
 import static java.util.TimeZone.getTimeZone;
 import static org.joda.time.DateTimeZone.forTimeZone;
 import static org.joda.time.format.DateTimeFormat.forPattern;
-
-import org.joda.time.DateTime;
-import org.joda.time.format.DateTimeFormatter;
 
 public class Cookie {
 
@@ -41,12 +41,12 @@ public class Cookie {
     @Override
     public String toString() {
         StringBuilder b = new StringBuilder();
-        b.append(name + '=' + value);
+        b.append(name).append('=').append(value);
         if (domain != null) {
-            b.append("; domain=" + domain);
+            b.append("; domain=").append(domain);
         }
         if (path != null) {
-            b.append("; path=" + path);
+            b.append("; path=").append(path);
         }
         if (expiry != null) {
             b.append("; expires=");

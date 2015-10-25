@@ -36,9 +36,9 @@ public class CallerIniterTest {
     private static final MethodCaller ENDPOINT_CALL =
             new MethodCaller(instantatorFor(TestEndpoint.class), method());
 
-    private static Instantator instantatorFor(final Class<?> clazz) {
+    private static Instantiator instantatorFor(final Class<?> clazz) {
         try {
-            return new Instantator(clazz.getDeclaredConstructor(), new Object[0]);
+            return new Instantiator(clazz.getDeclaredConstructor(), new Object[0]);
         } catch (final ReflectiveOperationException e) {
             return null;
         }
@@ -132,8 +132,8 @@ public class CallerIniterTest {
     }
 
     @SafeVarargs
-    private final List<Instantator> wrappers(final Class<? extends Wrapper>... classes) {
-        final List<Instantator> wrappers = new ArrayList<>(classes.length);
+    private final List<Instantiator> wrappers(final Class<? extends Wrapper>... classes) {
+        final List<Instantiator> wrappers = new ArrayList<>(classes.length);
         for (final Class<? extends Wrapper> wrapper : classes) {
             wrappers.add(instantatorFor(wrapper));
         }

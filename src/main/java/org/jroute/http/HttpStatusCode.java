@@ -42,6 +42,7 @@ public final class HttpStatusCode {
     public static final int UNSUPPORTED_MEDIA_TYPE = 415;
     public static final int REQUESTED_RANGE_NOT_SATISFIABLE = 416;
     public static final int EXPECTATION_FAILED = 417;
+    public static final int I_AM_A_TEAPOT = 418;
     public static final int UNPROCESSABLE_ENTITY = 422;
     public static final int LOCKED = 423;
     public static final int FAILED_DEPENDENCY = 424;

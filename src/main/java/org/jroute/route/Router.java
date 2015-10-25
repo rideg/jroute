@@ -1,18 +1,18 @@
 package org.jroute.route;
 
-import static org.jroute.http.response.Responses.RESPONSE_404;
-import static org.jroute.http.response.Responses.RESPONSE_500;
+import org.jroute.http.HttpMethod;
+import org.jroute.http.request.Request;
+import org.jroute.http.response.Response;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.lang.reflect.InvocationTargetException;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
-import org.jroute.http.HttpMethod;
-import org.jroute.http.request.Request;
-import org.jroute.http.response.Response;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import static org.jroute.http.response.Responses.RESPONSE_404;
+import static org.jroute.http.response.Responses.RESPONSE_500;
 
 public class Router {
 
@@ -33,7 +33,7 @@ public class Router {
             logger.debug("Cannot find match for: \"{} {}\"", getMethod(request), request.getPath());
             return RESPONSE_404;
         } catch (final Exception e) {
-            logger.error("Excpetion happened during process \"{} {}\"", getMethod(request), request.getPath());
+            logger.error("Exception happened during process \"{} {}\"", getMethod(request), request.getPath());
             logger.error("", getCause(e));
             return RESPONSE_500;
         }
@@ -49,7 +49,7 @@ public class Router {
 
     private List<RequestHandler> getMethodHandlers(final Request request) {
         final List<RequestHandler> handlers = chains.get(getMethod(request).toString());
-        return handlers == null ? Collections.<RequestHandler> emptyList() : handlers;
+        return handlers == null ? Collections.<RequestHandler>emptyList() : handlers;
     }
 
     private HttpMethod getMethod(final Request request) {
