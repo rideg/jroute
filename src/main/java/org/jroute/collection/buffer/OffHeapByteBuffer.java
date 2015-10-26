@@ -7,6 +7,7 @@ public class OffHeapByteBuffer {
 
     private static final Unsafe UNSAFE = UnsafeHelper.getUnsafe();
     private static final boolean IS_64_BIT = Unsafe.ADDRESS_SIZE == 8;
+    private static final long ARRAY_BYTE_BASE_OFFSET = Unsafe.ARRAY_BYTE_BASE_OFFSET;
 
     private final int capacity;
     private final long address;
@@ -23,10 +24,10 @@ public class OffHeapByteBuffer {
     }
 
     private long getAddress(final byte[] array) {
-        if(IS_64_BIT) {
-            return UNSAFE.getLong(array, (long) Unsafe.ARRAY_BYTE_BASE_OFFSET);
+        if (IS_64_BIT) {
+            return UNSAFE.getLong(array, ARRAY_BYTE_BASE_OFFSET);
         } else {
-            return normalize(UNSAFE.getInt(array, (long) Unsafe.ARRAY_BYTE_BASE_OFFSET));
+            return normalize(UNSAFE.getInt(array, ARRAY_BYTE_BASE_OFFSET));
         }
     }
 
