@@ -1,5 +1,6 @@
 package org.jroute.collection;
 
+import org.jroute.util.UnsafeHelper;
 import sun.misc.Unsafe;
 
 public class CASBlockingQueue<T> {

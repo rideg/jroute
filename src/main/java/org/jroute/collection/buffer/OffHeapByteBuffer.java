@@ -1,6 +1,6 @@
 package org.jroute.collection.buffer;
 
-import org.jroute.collection.UnsafeHelper;
+import org.jroute.util.UnsafeHelper;
 import sun.misc.Unsafe;
 
 public class OffHeapByteBuffer {

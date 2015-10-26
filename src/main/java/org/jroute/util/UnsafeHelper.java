@@ -1,4 +1,4 @@
-package org.jroute.collection;
+package org.jroute.util;
 
 import sun.misc.Unsafe;
 
