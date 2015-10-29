@@ -1,12 +1,12 @@
 package org.jroute.socket;
 
+import org.jroute.collection.buffer.OffHeapByteBuffer;
 import org.jroute.util.WaitStrategy;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InterruptedIOException;
 import java.net.Socket;
-import java.nio.ByteBuffer;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
@@ -17,7 +17,7 @@ public class SocketReader implements Runnable {
     private final WaitStrategy waitStrategy;
     private final AtomicBoolean shouldRun;
     private final Socket[] sockets;
-    private final ByteBuffer[] buffers;
+    private final OffHeapByteBuffer[] buffers;
     private int count;
     private Thread runner;
 
@@ -26,7 +26,7 @@ public class SocketReader implements Runnable {
         sockets = new Socket[size];
         shouldRun = new AtomicBoolean();
         offered = new AtomicReference<>();
-        buffers = new ByteBuffer[size];
+        buffers = new OffHeapByteBuffer[size];
     }
 
     public boolean offer(final Socket socket) {
@@ -36,7 +36,6 @@ public class SocketReader implements Runnable {
     @Override
     public void run() {
         allocateBuffers();
-        final byte[] tmp = new byte[ConnectionHandler.RECEIVE_BUFFER_SIZE];
         while (shouldRun.get()) {
             checkForNewSocket();
             int gap = 0;
@@ -44,18 +43,11 @@ public class SocketReader implements Runnable {
             for (int i = 0; i < count; i++) {
                 try {
                     final InputStream stream = sockets[i].getInputStream();
-                    final int available = stream.available();
-                    if (available > 0) {
+                    final OffHeapByteBuffer buffer = buffers[i];
+                    if (buffer.readAvailable(stream) > 0) {
                         noRead = false;
-                        ByteBuffer buffer = buffers[i];
-                        if (available > buffer.remaining()) {
-                            throw new IOException("Incoming package is too big");
-                        }
-                        stream.read(tmp, 0, available);
-                        buffer.put(tmp, 0, available);
                         if (canForward(buffer)) {
-                            buffer.flip();
-                            //
+
                         }
                     }
                     compactIfNeeded(gap, i);
@@ -78,7 +70,18 @@ public class SocketReader implements Runnable {
         closeSockets();
     }
 
-    private boolean canForward(final ByteBuffer buffer) {
+    private boolean canForward(final OffHeapByteBuffer buffer) {
+        if (buffer.getOffset() >= 4) {
+            for (int i = buffer.getOffset(); i >= 4; i--) {
+                if (buffer.get(i) == '\n' &&
+                        buffer.get(i - 1) == '\r' &&
+                        buffer.get(i - 2) == '\n' &&
+                        buffer.get(i - 3) == '\r') {
+                    buffer.mark(i + 1);
+                    return true;
+                }
+            }
+        }
         return false;
     }
 
@@ -91,7 +94,7 @@ public class SocketReader implements Runnable {
 
     private void allocateBuffers() {
         for (int i = 0; i < buffers.length; i++) {
-            buffers[i] = ByteBuffer.allocateDirect(ConnectionHandler.RECEIVE_BUFFER_SIZE);
+            buffers[i] = new OffHeapByteBuffer(ConnectionHandler.RECEIVE_BUFFER_SIZE);
         }
     }
 
